@@ -1,0 +1,6 @@
+working_dir=default
+[[reddit]]
+client_id=client_id
+client_secret=client_secret
+user_agent=user_agent
+already_scraped_file=list_of_already_scraped_subreddits

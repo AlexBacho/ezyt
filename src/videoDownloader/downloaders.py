@@ -1,10 +1,15 @@
 import subprocess
 import logging
 
+from time import time
+
 from .errors import ProcessingError
 
 
 YOUTUBEDL_PATH = '/usr/bin/youtube-dl'
+FILENAME_PREFIXES = {
+    'ytDownloader': 'ytVideo',
+}
 
 
 class baseDownloader():
@@ -29,22 +34,30 @@ class baseDownloader():
             raise ProcessingError(stderr)
         return stdout
 
+    def _get_default_filename(self):
+        return get_default_filename(type(self).__name__)
 
 class ytDownloader(baseDownloader):
 
-    def __init__(self):
-        pass
+    def __init__(self, args):
+        self.args = {
+            # default argmunents
+            filename=self._get_default_filename(),
+            filedir='.',
+        }
+        self.args.update(self._get_parsed_args(args))
 
-    def process(self, url, args={}):
-        args = self._get_parsed_args(args)
-        self._download(url, args)
+    def process(self, url):
+        self._download(url)
 
     def _download(self, url, args):
-        args = (
-            YOUTUBEDL_PATH,
-            url,
-        )
-        return self._run(args)
+        return self._run(self.args)
 
     def _get_parsed_args(self, args):
         return args
+
+
+def get_default_filename(downloader):
+    prefix = FILENAME_PREFIXES[downloader]
+    ts = str(int(time()))
+    return prefix + ts

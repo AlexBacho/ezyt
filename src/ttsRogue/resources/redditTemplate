@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body {
+  background-color: gray;
+  }
+  
+  a {
+    color: blue;
+    text-decoration: inherit;
+  }
+
+  html, body {
+    width: 100%;
+    margin: 0;
+  }
+  button {
+    background: transparent;
+    border: none;
+    color: black;
+    cursor: pointer;
+    padding: initial;
+  }
+  
+  input, textarea, [contenteditable] {  
+  font-family: Noto Sans, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 21px;
+  font-family: inherit;
+  }
+</style>
+</head>
+
+<body>
+<div>
+    <div>
+        <div>level {level}
+            <div>
+                <div><a href="/user/agentSMIITH1/">agentSMIITH1</a></div>
+                5.3k points &middot; <a href="/r/AskReddit/comments/j1wrzl/elevatormaintenance_folks_what_is_the_weirdest/g71vq2a/?utm_source=reddit&amp;utm_medium=web2x&amp;context=3" target="_blank" rel="nofollow noopener">2 hours ago</a>
+                <div><img src="https://preview.redd.it/award_images/t5_22cerq/x069ow7ewnf51_Excited.png?width=32&amp;height=32&amp;auto=webp&amp;s=52886a42b9871ec69a4465609472a864dbab27b1" alt="Excited" /><button></button></div>
+            </div>
+            <div data-test-id="comment">
+                <div>
+                    <p>{comment.text}</p>
+                </div>
+            </div>
+            <div>
+                <div><button>Reply</button><button>Give Award</button>
+                <div><button>share</button></div>
+                     <button>Report</button><button>Save</button></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
