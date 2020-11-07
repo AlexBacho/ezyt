@@ -1,6 +1,7 @@
-working_dir=default
+working_dir_root=/www/ezyt/data
+channels_filepath=/www/ezyt/conf/channels
 [[reddit]]
 client_id=client_id
 client_secret=client_secret
 user_agent=user_agent
-already_scraped_file=list_of_already_scraped_subreddits
+already_scraped_file=/www/ezyt/conf/already_scraped_subreddits

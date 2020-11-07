@@ -1,3 +1,5 @@
+import appdirs
+
 class BaseConfig:
     def __init__(self):
         pass
@@ -13,7 +15,8 @@ class Config(BaseConfig):
     def __init__(self, config_path):
         self.common = BaseConfig()
         self._init_from_file(config_path)
-    
+        self._set_working_directory_if_default()
+
     def __str__(self):
         cfg = [ f'{str(k)}: {str(v)}' for k, v in self.__dict__.items() ]
         return '{'  + ', '.join(cfg) + '}'
@@ -28,6 +31,12 @@ class Config(BaseConfig):
                 elif _valid_cfg_line(line):
                     key, value = line.split('=', maxsplit=1)
                     self.__dict__[submodule].__dict__[key] = value.strip()
+
+    def _set_working_directory_if_default(self):
+        if not self.common.__dict__.get('working_dir_root') or \
+            self.common.working_dir_root == 'default':
+            self.common.working_dir_root = appdirs.site_data_dir('ezyt')
+
 
 def _submodule_in_line(line):
     line = line.strip()

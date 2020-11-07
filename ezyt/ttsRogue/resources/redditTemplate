@@ -36,15 +36,15 @@
 <body>
 <div>
     <div>
-        <div>level {level}
+        <div>level {{ level }}
             <div>
-                <div><a href="/user/agentSMIITH1/">agentSMIITH1</a></div>
-                5.3k points &middot; <a href="/r/AskReddit/comments/j1wrzl/elevatormaintenance_folks_what_is_the_weirdest/g71vq2a/?utm_source=reddit&amp;utm_medium=web2x&amp;context=3" target="_blank" rel="nofollow noopener">2 hours ago</a>
+                <div><a href="/user/{{ author }}/">{{ author }}</a></div>
+                {{ score }} points &middot; <a href="/r/AskReddit/comments/j1wrzl/elevatormaintenance_folks_what_is_the_weirdest/g71vq2a/?utm_source=reddit&amp;utm_medium=web2x&amp;context=3" target="_blank" rel="nofollow noopener">{{ age }}</a>
                 <div><img src="https://preview.redd.it/award_images/t5_22cerq/x069ow7ewnf51_Excited.png?width=32&amp;height=32&amp;auto=webp&amp;s=52886a42b9871ec69a4465609472a864dbab27b1" alt="Excited" /><button></button></div>
             </div>
             <div data-test-id="comment">
                 <div>
-                    <p>{comment.text}</p>
+			            <p>{{ body }}</p>
                 </div>
             </div>
             <div>

@@ -6,14 +6,13 @@ from time import time
 from .errors import ProcessingError
 
 
-YOUTUBEDL_PATH = '/usr/bin/youtube-dl'
+YOUTUBEDL_PATH = "/usr/bin/youtube-dl"
 FILENAME_PREFIXES = {
-    'ytDownloader': 'ytVideo',
+    "YtDownloader": "ytVideo",
 }
 
 
-class baseDownloader():
-
+class BaseDownloader:
     def __init__(self):
         pass
 
@@ -22,35 +21,33 @@ class baseDownloader():
 
     def _run(self, args):
         process = subprocess.Popen(
-            args,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         stdout, stderr = process.communicate()
         if process.returncode != 0:
             logging.error(
-                f'Subprocess failed with code: {process.returncode} msg: {stderr}')
+                f"Subprocess failed with code: {process.returncode} msg: {stderr}"
+            )
             raise ProcessingError(stderr)
         return stdout
 
     def _get_default_filename(self):
         return get_default_filename(type(self).__name__)
 
-class ytDownloader(baseDownloader):
 
+class YtDownloader(BaseDownloader):
     def __init__(self, args):
         self.args = {
             # default argmunents
-            filename=self._get_default_filename(),
-            filedir='.',
+            "filename": self._get_default_filename(),
+            "filedir": ".",
         }
         self.args.update(self._get_parsed_args(args))
 
     def process(self, url):
         self._download(url)
 
-    def _download(self, url, args):
+    def _download(self, url):
         return self._run(self.args)
 
     def _get_parsed_args(self, args):
