@@ -1,7 +1,13 @@
-working_dir_root=/www/ezyt/data
-channels_filepath=/www/ezyt/conf/channels
+working_dir_root=/home/sani/work/ezyt/data
+channels_filepath=/home/sani/work/ezyt/conf/channels
 [[reddit]]
 client_id=client_id
 client_secret=client_secret
-user_agent=user_agent
-already_scraped_file=/www/ezyt/conf/already_scraped_subreddits
+user_agent= ezyt:<id>:<version> (by u/<user>)
+already_scraped_file=/home/sani/work/ezyt/conf/already_scraped_subreddits
+html_to_img_bin_path=/usr/bin/wkhtmltoimage
+comment_template_filepath=/home/sani/work/ezyt/resources/redditTemplate
+max_size_of_comment_tree=20
+[[tts]]
+censorship_level=3
+

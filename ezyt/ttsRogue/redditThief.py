@@ -26,26 +26,30 @@ class RedditThief:
         )
         self.already_scraped_file = cfg.reddit.already_scraped_file
 
-    def process(self, url):
-        pass
-
-    def auto_scrape(self, subreddit):
+    def scrape_hottest_from_subreddit(self, subreddit, render_images=True, render_tts=True):
         already_scraped = self._get_already_scraped()
         for submission in self.reddit.subreddit(subreddit).hot():
             if submission.id not in already_scraped and not submission.stickied:
                 debug(f"Scraping submission: {submission.id}.")
-                return self.scrape(submission)
+                return self._scrape(submission, render_images=render_images, render_tts=render_tts)
             else:
                 debug(f"Skipping submission: {submission.id}.")
 
-    def scrape(self, submission):
-        return SubmissionData(self.cfg, submission).get_rendered_comments()
+    def scrape_submission(self, submission_id, render_images=True, render_tts=True):
+        submission = self.reddit.submission(id=submission_id)
+        return self._scrape(submission, render_images=render_images, render_tts=render_tts)
+
+    def _scrape(self, submission, render_images=True, render_tts=True):
+        return SubmissionData(self.cfg, submission).get_rendered_comments(render_images=render_images, render_tts=render_tts)
 
     def _get_already_scraped(self):
         lst = []
-        with open(self.already_scraped_file, "r+") as f:
-            for line in f:
-                lst.append(line.strip())
+        try:
+            with open(self.already_scraped_file, "r") as f:
+                for line in f:
+                    lst.append(line.strip())
+        except:
+            pass
         return lst
 
     def _write_submission_into_scraped_file(self, submission):
@@ -70,7 +74,7 @@ class SubmissionData:
         self.working_dir = f"{cfg.common.working_dir_root}/reddit/{submission.id}"
         self.submission = submission
 
-    def get_rendered_comments(self, render_text=True, generate_tts=True):
+    def get_rendered_comments(self, render_images=True, render_tts=True):
         Path(self.working_dir).mkdir(exist_ok=True, parents=True)
         original_comments = self.get_interesting_comments_from_submission()
         debug(
@@ -78,12 +82,12 @@ class SubmissionData:
         )
         rendered_images = (
             self.get_rendered_images_from_comments(original_comments)
-            if render_text
+            if render_images
             else []
         )
         generated_tts = (
             self.get_generated_tts_from_comments(original_comments)
-            if generate_tts
+            if render_tts
             else []
         )
         return zip(original_comments, rendered_images, generated_tts)

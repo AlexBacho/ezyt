@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<meta charset="UTF-8" />
+<style>
+	* {
+		background: #0d0d1a
+	}
+
+	body {
+		display: grid;
+		height: 100vh;
+		grid-template: auto 1fr auto / auto 1fr auto
+	}
+
+	header {
+		font-size: x-small;
+		padding: 2rem;
+		grid-column: 1 / 4;
+		color: gray;
+	}
+
+	main {
+		grid-column: 2 / 3;
+	}
+
+	footer {
+		padding: 2rem;
+		text-align: center;
+		font-size: medium;
+		grid-column: 1 / 4;
+		color: gray;
+	}
+
+	body {
+		font-family: system-ui, sans-serif;
+		font-size: x-large;
+		color: white;
+	}
+ 
+</style>
+<html>
+<header>
+	<h1>{{ author }}</h1>
+</header>
+<main>{{ body }}</main>
+<footer> ↑ {{ score }} ↓</footer>
+
+</html>
