@@ -20,7 +20,6 @@ class VideoEditor:
         audio = AudioFileClip(audio_path)
         video = (
             ImageClip(image_path)
-            .resize(1.2)
             .on_color(size=COLOR_BACKGROUND_SIZE, color=COLOR_BLACK)
             .set_pos((0.5, 0.5), relative=True)
             .set_audio(audio)

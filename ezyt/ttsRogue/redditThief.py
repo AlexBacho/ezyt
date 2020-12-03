@@ -26,21 +26,29 @@ class RedditThief:
         )
         self.already_scraped_file = cfg.reddit.already_scraped_file
 
-    def scrape_hottest_from_subreddit(self, subreddit, render_images=True, render_tts=True):
+    def scrape_hottest_from_subreddit(
+        self, subreddit, render_images=True, render_tts=True
+    ):
         already_scraped = self._get_already_scraped()
         for submission in self.reddit.subreddit(subreddit).hot():
             if submission.id not in already_scraped and not submission.stickied:
                 debug(f"Scraping submission: {submission.id}.")
-                return self._scrape(submission, render_images=render_images, render_tts=render_tts)
+                return self._scrape(
+                    submission, render_images=render_images, render_tts=render_tts
+                )
             else:
                 debug(f"Skipping submission: {submission.id}.")
 
     def scrape_submission(self, submission_id, render_images=True, render_tts=True):
         submission = self.reddit.submission(id=submission_id)
-        return self._scrape(submission, render_images=render_images, render_tts=render_tts)
+        return self._scrape(
+            submission, render_images=render_images, render_tts=render_tts
+        )
 
     def _scrape(self, submission, render_images=True, render_tts=True):
-        return SubmissionData(self.cfg, submission).get_rendered_comments(render_images=render_images, render_tts=render_tts)
+        return SubmissionData(self.cfg, submission).get_rendered_comments(
+            render_images=render_images, render_tts=render_tts
+        )
 
     def _get_already_scraped(self):
         lst = []
@@ -80,17 +88,17 @@ class SubmissionData:
         debug(
             f"Found {len(original_comments)} interesting comments for submission: {self.submission.id}"
         )
-        rendered_images = (
+        self.rendered_images = (
             self.get_rendered_images_from_comments(original_comments)
             if render_images
             else []
         )
-        generated_tts = (
+        self.rendered_tts = (
             self.get_generated_tts_from_comments(original_comments)
             if render_tts
             else []
         )
-        return zip(original_comments, rendered_images, generated_tts)
+        return self
 
     def get_interesting_comments_from_submission(self):
         op = self._get_data_from_op()
@@ -103,7 +111,15 @@ class SubmissionData:
         comments = [op] + original_comments_and_replies[
             : int(self.max_size_of_comment_tree)
         ]
+        comments = self._remove_link_comments(comments)
         return comments
+
+    def _remove_link_comments(self, comments):
+        for index, comment in enumerate(comments):
+            if len(comment.body.split()) == 1:
+                if "http" in comment.body:
+                    comments[index] = None
+        return list(filter(None, comments))
 
     def _get_data_from_op(self):
         body = REDDIT_OP_TEMPLATE.format(
@@ -156,7 +172,7 @@ class SubmissionData:
         ]
         _, stderr = run_subprocess(args)
         if not stderr:
-            debug(f"Rendering of comment: {comment.id} successfull.")
+            debug(f"Rendering of comment: {comment.id} successful.")
         return rendered_image_filepath
 
     def _get_rendered_template_from_comment(self, index, comment):
@@ -179,7 +195,7 @@ class SubmissionData:
         tts = TTS(self.cfg)
         generated_tts = []
         for index, comment in enumerate(comments):
-            debug(f"Generating text-to-speech mp3 file for {comment.id}.")
+            debug(f"Rendering text-to-speech mp3 file for {comment.id}.")
             generated_tts.append(
                 tts.get_mp3_from_text(
                     text=comment.body,

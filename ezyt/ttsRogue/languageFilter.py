@@ -1,6 +1,18 @@
 import re
 
 
+def get_tts_compatible_version_of_text(text, filter_level=3):
+    text = get_family_friendly_version_of_text(text, filter_level)
+    return get_text_without_links(text)
+
+
+def get_text_without_links(text):
+    for word in text.split():
+        if "http" in word:
+            text = text.replace(word, "")
+    return text
+
+
 def get_family_friendly_version_of_text(text, level=3):
     profanity_filter = _get_profanity_dict_strength(level)
     for word in text.split():

@@ -3,7 +3,7 @@ import os
 from google.cloud import texttospeech
 from pathlib import Path
 
-from .languageFilter import get_family_friendly_version_of_text
+from .languageFilter import get_tts_compatible_version_of_text
 from .ttsVoices import GOOGLE_STANDARD_VOICES, GOOGLE_WAVENET_VOICES
 from .errors import InvalidParamsError
 
@@ -37,7 +37,7 @@ class TTS:
                 raise InvalidParamsError("No text or textpath specified.")
             text = self._read_file_and_replace_profanities(text_path)
         else:
-            text = self._get_text_with_replaced_profanities(text)
+            text = self._get_tts_compatible_text(text)
 
         if not mp3_path:
             mp3_path = self._next_path()
@@ -68,12 +68,12 @@ class TTS:
 
     def _read_file_and_replace_profanities(self, filename):
         with open(filename, "r") as f:
-            return self._get_text_with_replaced_profanities(f.read())
+            return self._get_tts_compatible_text(f.read())
 
-    def _get_text_with_replaced_profanities(self, text):
-        # TODO: cenzurujeme dynamicky, silna cenzura staci na nadpis, tumbnail a prvych 30s videa
+    def _get_tts_compatible_text(self, text):
+        # TODO: cenzurujeme dynamicky, silna cenzura staci na nadpis, thumbnail a prvych 30s videa
         censorship_level = self.cfg.tts.get("censorship_level", 3)
-        return get_family_friendly_version_of_text(text, level=censorship_level)
+        return get_tts_compatible_version_of_text(text, filter_level=censorship_level)
 
     def _get_voice_from_id(self, voice_id, use_paid_voices=False):
         if voice_id and voice_id in self.voices:
