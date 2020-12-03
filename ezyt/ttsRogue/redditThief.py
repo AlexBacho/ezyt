@@ -84,17 +84,17 @@ class SubmissionData:
 
     def get_rendered_comments(self, render_images=True, render_tts=True):
         Path(self.working_dir).mkdir(exist_ok=True, parents=True)
-        original_comments = self.get_interesting_comments_from_submission()
+        self.comments = self.get_interesting_comments_from_submission()
         debug(
-            f"Found {len(original_comments)} interesting comments for submission: {self.submission.id}"
+            f"Found {len(self.comments)} interesting comments for submission: {self.submission.id}"
         )
         self.rendered_images = (
-            self.get_rendered_images_from_comments(original_comments)
+            self.get_rendered_images_from_comments(self.comments)
             if render_images
             else []
         )
         self.rendered_tts = (
-            self.get_generated_tts_from_comments(original_comments)
+            self.get_generated_tts_from_comments(self.comments)
             if render_tts
             else []
         )
