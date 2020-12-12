@@ -1,9 +1,13 @@
 import re
 
+ALPHANUMERAL_AND_PUNCTUACTION = "[^A-Za-z0-9 .,?!']+"
+
 
 def get_tts_compatible_version_of_text(text, filter_level=3):
     text = get_family_friendly_version_of_text(text, filter_level)
-    return get_text_without_links(text)
+    text = get_text_without_special_characters(text)
+    text = get_text_without_links(text)
+    return text
 
 
 def get_text_without_links(text):
@@ -11,6 +15,10 @@ def get_text_without_links(text):
         if "http" in word:
             text = text.replace(word, "")
     return text
+
+
+def get_text_without_special_characters(text):
+    return re.sub(ALPHANUMERAL_AND_PUNCTUACTION, "", text)
 
 
 def get_family_friendly_version_of_text(text, level=3):
@@ -60,6 +68,8 @@ def _get_replacement(profanity_filter, word):
     suffix = re.findall(r"\W+$", word)
     suffix = suffix[0] if suffix else ""
     base_word = re.findall(r"\w*", word)[0]
+    if not base_word:
+        return word
     if base_word[0].isupper():
         new_word = profanity_filter[base_word.lower()].capitalize()
     else:

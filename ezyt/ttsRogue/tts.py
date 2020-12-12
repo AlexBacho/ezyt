@@ -98,7 +98,6 @@ class TTS:
 
     def _next_path(self, working_dir=None):
         working_dir = working_dir or self.working_dir
-
         i = 0
         while os.path.exists(f"{working_dir}/{DEFAULT_MP3_FILENAME_FORMAT.format(i)}"):
             i += 1

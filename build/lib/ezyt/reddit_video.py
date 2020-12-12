@@ -49,7 +49,7 @@ def create_reddit_video(
         )
 
     video_path = output_path or f"{working_dir}/{submission.id}_final.mp4"
-    editor.concat_videos(video_chunks, video_path)
+    editor.concat_videos_ffmpeg(video_chunks, video_path)
 
     submission_title = submission.title or submission.selftext
     thumbnail_path = create_thumbnail_for_submission(
@@ -106,7 +106,7 @@ def create_description(submission_data):
     text = f"{submission_data.submission.title}\n{submission_data.submission.permalink}"
     text += "\n Thanks to all the users who participated: \n"
     for comment in submission_data.comments:
-        text += str(comment.author)
+        text += str(comment.author) + ","
     return text
 
 

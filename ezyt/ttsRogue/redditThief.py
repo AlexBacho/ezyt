@@ -94,9 +94,7 @@ class SubmissionData:
             else []
         )
         self.rendered_tts = (
-            self.get_generated_tts_from_comments(self.comments)
-            if render_tts
-            else []
+            self.get_generated_tts_from_comments(self.comments) if render_tts else []
         )
         return self
 
