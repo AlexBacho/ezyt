@@ -49,10 +49,17 @@ class VideoEditor:
         padding=DEFAULT_VIDEO_PADDING,
         fps=None,
         codec=None,
+        transition=None,
     ):
         videos = [VideoFileClip(video) for video in videos]
+        if transition:
+            transition = VideoFileClip(transition).set_fps(videos[0].fps)
+
         concacted_video = concatenate_videoclips(
-            videos, padding=padding, method=VIDEO_CONCAT_METHOD
+            videos,
+            padding=padding,
+            method=VIDEO_CONCAT_METHOD,
+            transition=transition,
         )
         concacted_video.write_videofile(output_path, fps=fps, codec=codec)
         return output_path

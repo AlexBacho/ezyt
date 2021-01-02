@@ -129,6 +129,7 @@ class SubmissionData:
             created_utc=self.submission.created_utc,
             score=self.submission.score,
             body=body,
+            is_parent=True,
         )
 
     def _get_data_from_comment(self, comment):
@@ -138,7 +139,17 @@ class SubmissionData:
             created_utc=comment.created_utc,
             score=comment.score,
             body=comment.body,
+            is_parent=self._is_parent_comment(comment),
         )
+
+    def _is_parent_comment(self, comment):
+        """
+        from .../praw/models/reddit/comment.py
+        ``parent_id``           The ID of the parent comment (prefixed with ``t1_``).
+                                If it is a top-level comment, this returns the
+                                submission ID instead (prefixed with ``t3_``).
+        """
+        return True if comment.parent_id == f"t3_{self.submission.id}" else False
 
     def _get_sorted_comments_and_their_replies(self, comments):
         comments_and_replies = []
@@ -165,6 +176,10 @@ class SubmissionData:
         )
         args = [
             self.html_to_img_bin_path,
+            "--width",
+            "1080",
+            "--height",
+            "720",
             rendered_template_filepath,
             rendered_image_filepath,
         ]
@@ -206,9 +221,16 @@ class SubmissionData:
 
 
 class Comment:
-    def __init__(self, id, author, created_utc, score, body):
+    def __init__(self, id, author, created_utc, score, body, is_parent):
         self.id = id
         self.author = author
         self.created_utc = created_utc
         self.score = score
         self.body = body
+        self.is_parent = is_parent
+
+    def __str__(self):
+        return str(self.__dict__)
+
+    def __repr_(self):
+        return str(self)

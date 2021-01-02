@@ -1,6 +1,6 @@
 import re
 
-ALPHANUMERAL_AND_PUNCTUACTION = "[^A-Za-z0-9 .,?!']+"
+ALPHANUMERAL_AND_PUNCTUACTION = "[^A-Za-z0-9 .,?!'’-]+"
 
 
 def get_tts_compatible_version_of_text(text, filter_level=3):
@@ -79,6 +79,13 @@ def _get_replacement(profanity_filter, word):
 
 def _get_censored_word(word):
     return word[0] + "*" * (len(word) - 2) + word[-1]
+
+
+# words and phrases the AI doesn't know how to read
+NON_PROFANITIES_TO_REPLACE = {
+    "24-7": "twentyfour seven",
+    "omg": "oh my god",
+}
 
 
 # censored and replaced only when necessary

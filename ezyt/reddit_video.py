@@ -1,10 +1,15 @@
+import os
+
 from .ttsRogue import RedditThief
 from .videoEditor import VideoEditor
 from .imageEditor import ImageEditor
 from .cfg import Config
 from .metafiles import VideoMetafile
+from .base.utils import get_tmp_filepath_in_dir
 
 VIDEO_CHUNK_FORMAT = "{working_dir}/video_{index}.mp4"
+DEFAULT_MAX_TITLE_LENGTH = 10
+YOUTUBE_TITLE_PREFIX = "Ask Reddit |"
 
 
 def create_reddit_video(
@@ -49,13 +54,22 @@ def create_reddit_video(
         )
 
     video_path = output_path or f"{working_dir}/{submission.id}_final.mp4"
-    editor.concat_videos_ffmpeg(video_chunks, video_path)
+    cuts = get_cuts_in_reddit_video(submission_data.comments)
 
-    submission_title = submission.title or submission.selftext
+    concat_reddit_chunks(
+        editor,
+        video_chunks,
+        video_path,
+        cuts=[],
+        transition=cfg.reddit.transition_video,
+    )
+
+    short_submission_title = get_shorter_title_if_necessary(submission.title)
     thumbnail_path = create_thumbnail_for_submission(
         cfg,
-        text=submission_title,
+        text=short_submission_title,
         output_path=f"{working_dir}/{submission.id}_thumbnail.png",
+        nsfw=submission.over_18,
     )
 
     metafile_path = create_video_metafile(
@@ -63,11 +77,51 @@ def create_reddit_video(
         thumbnail=thumbnail_path,
         video=video_path,
         channel="0",
-        title=f"Ask Reddit | {submission.title}",
+        title=f"Ask Reddit | {short_submission_title}",
         description=create_description(submission_data),
     )
 
     return metafile_path
+
+
+def get_cuts_in_reddit_video(comments):
+    cuts = []
+    for i, c in enumerate(comments[1:-1]):
+        if c.is_parent and not comments[i - 1].is_parent:
+            cuts.append(i)
+    return cuts
+
+
+def concat_reddit_chunks(editor, video_chunks, output_path, cuts=[], transition=None):
+    if cuts and transition:
+        video_blocks = []
+        last_cut = 0
+        for cut in cuts:
+            video_blocks.append(video_chunks[last_cut:cut])
+            last_cut = cut
+
+        tmp_file_dir = f"{editor.cfg.common.working_dir_root}/tmp"
+        merged_blocks = []
+        try:
+            for block in video_blocks:
+                tmp_file = get_tmp_filepath_in_dir(tmp_file_dir, suffix=".mp4")
+                merged_blocks.append(editor.concat_videos_ffmpeg(block, tmp_file))
+            output = editor.concat_videos(
+                merged_blocks, output_path, transition=transition
+            )
+        finally:
+            for block in merged_blocks:
+                pass
+                # os.remove(block)
+        return output
+    return editor.concat_videos_ffmpeg(video_chunks, output_path)
+
+
+def get_shorter_title_if_necessary(title, max_length=DEFAULT_MAX_TITLE_LENGTH):
+    words = title.split()
+    if len(words) > max_length:
+        return f"{' '.join(words[:max_length])}..."
+    return title
 
 
 def merge_images_with_audio(editor, image_files, audio_files, working_dir):
@@ -87,10 +141,14 @@ def merge_images_with_audio(editor, image_files, audio_files, working_dir):
     return ret
 
 
-def create_thumbnail_for_submission(cfg, text, output_path):
+def create_thumbnail_for_submission(cfg, text, output_path, nsfw=False):
     editor = ImageEditor(cfg)
+    if nsfw and cfg.reddit.get("thumbnail_background_nsfw"):
+        image_path = cfg.reddit.get("thumbnail_background_nsfw")
+    else:
+        image_path = cfg.reddit.get("thumbnail_background")
     editor.add_highlighted_text_to_image(
-        text, output_path=output_path, image_path=cfg.reddit.get("thumbnail_background")
+        text, output_path=output_path, image_path=image_path
     )
     return output_path
 
