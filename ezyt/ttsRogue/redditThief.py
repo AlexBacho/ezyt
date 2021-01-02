@@ -33,9 +33,11 @@ class RedditThief:
         for submission in self.reddit.subreddit(subreddit).hot():
             if submission.id not in already_scraped and not submission.stickied:
                 debug(f"Scraping submission: {submission.id}.")
-                return self._scrape(
+                out = self._scrape(
                     submission, render_images=render_images, render_tts=render_tts
                 )
+                self._write_submission_into_scraped_file(submission)
+                return out
             else:
                 debug(f"Skipping submission: {submission.id}.")
 
