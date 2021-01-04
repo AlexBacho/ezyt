@@ -7,6 +7,7 @@ from moviepy.editor import (
     concatenate_videoclips,
 )
 from pathlib import Path
+from itertools import chain
 
 from ezyt.base.utils import run_subprocess
 
@@ -20,7 +21,7 @@ CONCAT_FILE_NAME = "tmp_concat.txt"
 
 
 class VideoEditor:
-    def __init__(self, cfg):
+    def __init__(self, cfg=None):
         self.cfg = cfg
 
     def add_audio_to_image(self, image_path, audio_path, output_path, fps=None):
@@ -42,29 +43,35 @@ class VideoEditor:
         )
         return output_path
 
-    def concat_videos(
+    def concat_videos_complex(
         self,
         videos,
         output_path,
         padding=DEFAULT_VIDEO_PADDING,
-        fps=None,
-        codec=None,
         transition=None,
     ):
-        videos = [VideoFileClip(video) for video in videos]
+        """Slower, but capable of concacting videos with different attibutes."""
         if transition:
-            transition = VideoFileClip(transition).set_fps(videos[0].fps)
+            videos = self._add_transitions_to_videos(transition, videos)
+        videos = [VideoFileClip(video) for video in videos]
+
+        fps = max([video.fps for video in videos])
+        width = min([video.w for video in videos])
+        height = min([video.h for video in videos])
+        for i, video in enumerate(videos):
+            videos[i] = video.resize(newsize=(width, height)).set_fps(fps)
 
         concacted_video = concatenate_videoclips(
             videos,
             padding=padding,
             method=VIDEO_CONCAT_METHOD,
-            transition=transition,
         )
-        concacted_video.write_videofile(output_path, fps=fps, codec=codec)
+        concacted_video.write_videofile(output_path)
+        print(f"Concacted video ready at: {output_path}")
         return output_path
 
-    def concat_videos_ffmpeg(self, videos, output_path):
+    def concat_videos_simple(self, videos, output_path):
+        """Only use to concat videos with the same attributes (codec, resolution, fps...)"""
         input_path = self._get_concat_file(videos)
         args = [
             self.cfg.video.ffmpeg_path,
@@ -83,8 +90,13 @@ class VideoEditor:
             run_subprocess(args)
             print(f"Concacted video ready at: {output_path}")
         finally:
-            os.remove(input_path)
+            pass
+            # os.remove(input_path)
         return output_path
+
+    def _add_transitions_to_videos(self, transition, videos):
+        videos = _add_element_to_array_after_every_n_places(transition, videos, 1)
+        return videos[:-1]
 
     def _get_concat_file(self, videos):
         working_dir = f"{self.cfg.common.working_dir_root}/tmp"
@@ -94,3 +106,16 @@ class VideoEditor:
             for video in videos:
                 f.write(f"file '{video}'\n")
         return output_path
+
+
+def _add_element_to_array_after_every_n_places(element, array, n):
+    return list(
+        chain(
+            *[
+                array[i : i + n] + [element]
+                if len(array[i : i + n]) == n
+                else array[i : i + n]
+                for i in range(0, len(array), n)
+            ]
+        )
+    )

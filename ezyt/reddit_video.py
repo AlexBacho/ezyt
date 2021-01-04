@@ -5,7 +5,7 @@ from .videoEditor import VideoEditor
 from .imageEditor import ImageEditor
 from .cfg import Config
 from .metafiles import VideoMetafile
-from .base.utils import get_tmp_filepath_in_dir
+from .base.utils import get_tmp_filepath_in_dir, debug
 
 VIDEO_CHUNK_FORMAT = "{working_dir}/video_{index}.mp4"
 DEFAULT_MAX_TITLE_LENGTH = 10
@@ -60,7 +60,7 @@ def create_reddit_video(
         editor,
         video_chunks,
         video_path,
-        cuts=[],
+        cuts=cuts,
         transition=cfg.reddit.transition_video,
     )
 
@@ -86,35 +86,43 @@ def create_reddit_video(
 
 def get_cuts_in_reddit_video(comments):
     cuts = []
-    for i, c in enumerate(comments[1:-1]):
-        if c.is_parent and not comments[i - 1].is_parent:
+    for i in range(1, len(comments) - 1):
+        if comments[i].is_parent and not comments[i - 1].is_parent:
             cuts.append(i)
     return cuts
 
 
 def concat_reddit_chunks(editor, video_chunks, output_path, cuts=[], transition=None):
     if cuts and transition:
-        video_blocks = []
-        last_cut = 0
-        for cut in cuts:
-            video_blocks.append(video_chunks[last_cut:cut])
-            last_cut = cut
-
         tmp_file_dir = f"{editor.cfg.common.working_dir_root}/tmp"
-        merged_blocks = []
-        try:
-            for block in video_blocks:
-                tmp_file = get_tmp_filepath_in_dir(tmp_file_dir, suffix=".mp4")
-                merged_blocks.append(editor.concat_videos_ffmpeg(block, tmp_file))
-            output = editor.concat_videos(
-                merged_blocks, output_path, transition=transition
+        video_blocks = []
+        files_to_delete = []
+        last_cut = 0
+        debug(cuts)
+        for cut in cuts:
+            debug(cut)
+            tmp_file = get_tmp_filepath_in_dir(tmp_file_dir, suffix=".mp4")
+            block = editor.concat_videos_simple(video_chunks[last_cut:cut], tmp_file)
+            video_blocks.append(block)
+            last_cut = cut
+        files_to_delete.extend(video_blocks)
+
+        video_blocks_with_transition = []
+        for video_block in video_blocks[:-1]:
+            tmp_file = get_tmp_filepath_in_dir(tmp_file_dir, suffix=".mp4")
+            video_block_with_transition = editor.concat_videos_complex(
+                [video_block] + [transition], tmp_file
             )
-        finally:
-            for block in merged_blocks:
-                pass
-                # os.remove(block)
+            video_blocks_with_transition.append(video_block_with_transition)
+        video_blocks_with_transition.append(video_blocks[-1])
+        files_to_delete.extend(video_blocks_with_transition)
+
+        output = editor.concat_videos_simple(video_blocks_with_transition, output_path)
+        for block in files_to_delete:
+            pass
+            # os.remove(block)
         return output
-    return editor.concat_videos_ffmpeg(video_chunks, output_path)
+    return editor.concat_videos_simple(video_chunks, output_path)
 
 
 def get_shorter_title_if_necessary(title, max_length=DEFAULT_MAX_TITLE_LENGTH):

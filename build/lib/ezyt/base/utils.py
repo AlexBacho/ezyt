@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .errors import ProcessingError
 
+DEBUG = True
 
 def run_subprocess(args):
     process = subprocess.Popen(
@@ -27,3 +28,8 @@ def get_tmp_filepath_in_dir(directory, suffix=""):
         path = path_format.format(directory=directory, uid=uid, suffix=suffix)
         if not Path(path).exists():
             return path
+
+def debug(msg):
+    logging.debug(msg)
+    if DEBUG:
+        print(msg)
