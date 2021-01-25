@@ -6,6 +6,7 @@ from .errors import ProcessingError
 
 DEBUG_MODE = True
 
+
 def get_rendered_template(template_path, args):
     """renders and returns the template in-memory, only use with small files."""
     with open(template_path, "r") as f:
@@ -26,7 +27,7 @@ def run_subprocess(args):
     return stdout, stderr
 
 
-def debug(msg):
+def debug(msg, debug=DEBUG_MODE):
     logging.debug(msg)
-    if DEBUG_MODE:
+    if debug:
         print(msg)

@@ -10,6 +10,7 @@ from pathlib import Path
 from itertools import chain
 
 from ezyt.base.utils import run_subprocess
+from ezyt.base.utils import debug
 
 DEFAULT_IMAGE_VIDEO_FPS = 5
 COLOR_WHITE = (255, 255, 255)
@@ -24,7 +25,9 @@ class VideoEditor:
     def __init__(self, cfg=None):
         self.cfg = cfg
 
-    def add_audio_to_image(self, image_path, audio_path, output_path, fps=None):
+    def add_audio_to_image(
+        self, image_path, audio_path, output_path, fps=None, logger=None
+    ):
         audio = AudioFileClip(audio_path)
         video = (
             ImageClip(image_path)
@@ -40,6 +43,7 @@ class VideoEditor:
         )
         video.write_videofile(
             output_path,
+            logger=logger,
         )
         return output_path
 
@@ -47,32 +51,21 @@ class VideoEditor:
         self,
         videos,
         output_path,
-        padding=DEFAULT_VIDEO_PADDING,
         transition=None,
     ):
         """Slower, but capable of concacting videos with different attibutes."""
         if transition:
             videos = self._add_transitions_to_videos(transition, videos)
-        videos = [VideoFileClip(video) for video in videos]
-
-        fps = max([video.fps for video in videos])
-        width = min([video.w for video in videos])
-        height = min([video.h for video in videos])
-        for i, video in enumerate(videos):
-            videos[i] = video.resize(newsize=(width, height)).set_fps(fps)
-
-        concacted_video = concatenate_videoclips(
-            videos,
-            padding=padding,
-            method=VIDEO_CONCAT_METHOD,
+        debug(
+            f"Concacting videos: {videos[0]} {'...' if len(videos) > 2 else ''} {videos[-1]}"
         )
-        concacted_video.write_videofile(output_path)
-        print(f"Concacted video ready at: {output_path}")
+        _concat_videos_with_melt(videos, output_path)
+        debug(f"Concacted video ready at: {output_path}")
         return output_path
 
     def concat_videos_simple(self, videos, output_path):
         """Only use to concat videos with the same attributes (codec, resolution, fps...)"""
-        input_path = self._get_concat_file(videos)
+        ffmpeg_concat_file = self._get_concat_file(videos)
         args = [
             self.cfg.video.ffmpeg_path,
             "-f",
@@ -80,7 +73,7 @@ class VideoEditor:
             "-safe",
             "0",
             "-i",
-            input_path,
+            ffmpeg_concat_file,
             "-c",
             "copy",
             "-y",
@@ -88,10 +81,9 @@ class VideoEditor:
         ]
         try:
             run_subprocess(args)
-            print(f"Concacted video ready at: {output_path}")
+            debug(f"Concacted video ready at: {output_path}")
         finally:
-            pass
-            # os.remove(input_path)
+            os.remove(ffmpeg_concat_file)
         return output_path
 
     def _add_transitions_to_videos(self, transition, videos):
@@ -106,6 +98,21 @@ class VideoEditor:
             for video in videos:
                 f.write(f"file '{video}'\n")
         return output_path
+
+
+def _concat_videos_with_melt(video_paths, output_path):
+    args = (
+        ["melt"]
+        + video_paths
+        + [
+            "-consumer",
+            f"avformat:{output_path}.mp4",
+            "acodec=libmp3lame",
+            "vcodec=libx264",
+        ]
+    )
+    run_subprocess(args)
+    return output_path
 
 
 def _add_element_to_array_after_every_n_places(element, array, n):

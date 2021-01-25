@@ -3,6 +3,7 @@ import subprocess
 import sys
 
 from pathlib import Path
+from tqdm import tqdm
 
 from .errors import ProcessingError
 from .utils import get_rendered_template, run_subprocess, debug
@@ -108,11 +109,22 @@ class SubmissionData:
         original_comments_and_replies = self._get_sorted_comments_and_their_replies(
             original_comments
         )
+        comments = self._remove_invalid_comments(original_comments_and_replies)
         comments = [op] + original_comments_and_replies[
             : int(self.max_size_of_comment_tree)
         ]
-        comments = self._remove_link_comments(comments)
         return comments
+
+    def _remove_invalid_comments(self, comments):
+        clean_comments = self._remove_link_comments(comments)
+        clean_comments = self._remove_deleted_comments(clean_comments)
+        return clean_comments
+
+    def _remove_deleted_comments(self, comments):
+        for index, comment in enumerate(comments):
+            if comment.body == "[deleted]":
+                comments[index] = None
+        return list(filter(None, comments))
 
     def _remove_link_comments(self, comments):
         for index, comment in enumerate(comments):
@@ -164,8 +176,8 @@ class SubmissionData:
 
     def get_rendered_images_from_comments(self, comments):
         rendered_comments = []
-        for i, comment in enumerate(comments):
-            debug(f"Rendering image .jpg file for {comment.id}.")
+        debug(f"Rendering images.")
+        for i, comment in tqdm(enumerate(comments)):
             rendered_comments.append(self._get_rendered_image_from_comment(i, comment))
         return rendered_comments
 
@@ -209,8 +221,8 @@ class SubmissionData:
     def get_generated_tts_from_comments(self, comments):
         tts = TTS(self.cfg)
         generated_tts = []
-        for index, comment in enumerate(comments):
-            debug(f"Rendering text-to-speech mp3 file for {comment.id}.")
+        debug(f"Rendering text-to-speech files.")
+        for index, comment in tqdm(enumerate(comments)):
             generated_tts.append(
                 tts.get_mp3_from_text(
                     text=comment.body,

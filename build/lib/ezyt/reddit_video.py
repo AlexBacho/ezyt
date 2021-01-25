@@ -96,31 +96,18 @@ def concat_reddit_chunks(editor, video_chunks, output_path, cuts=[], transition=
     if cuts and transition:
         tmp_file_dir = f"{editor.cfg.common.working_dir_root}/tmp"
         video_blocks = []
-        files_to_delete = []
         last_cut = 0
-        debug(cuts)
         for cut in cuts:
-            debug(cut)
             tmp_file = get_tmp_filepath_in_dir(tmp_file_dir, suffix=".mp4")
             block = editor.concat_videos_simple(video_chunks[last_cut:cut], tmp_file)
             video_blocks.append(block)
             last_cut = cut
-        files_to_delete.extend(video_blocks)
 
-        video_blocks_with_transition = []
-        for video_block in video_blocks[:-1]:
-            tmp_file = get_tmp_filepath_in_dir(tmp_file_dir, suffix=".mp4")
-            video_block_with_transition = editor.concat_videos_complex(
-                [video_block] + [transition], tmp_file
-            )
-            video_blocks_with_transition.append(video_block_with_transition)
-        video_blocks_with_transition.append(video_blocks[-1])
-        files_to_delete.extend(video_blocks_with_transition)
-
-        output = editor.concat_videos_simple(video_blocks_with_transition, output_path)
-        for block in files_to_delete:
-            pass
-            # os.remove(block)
+        output = editor.concat_videos_complex(
+            video_blocks, output_path, transition=transition
+        )
+        for block in video_blocks:
+            os.remove(block)
         return output
     return editor.concat_videos_simple(video_chunks, output_path)
 
