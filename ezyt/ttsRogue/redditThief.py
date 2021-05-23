@@ -1,12 +1,13 @@
 import praw
-import subprocess
 import sys
 
 from pathlib import Path
 from tqdm import tqdm
 
-from .errors import ProcessingError
-from .utils import get_rendered_template, run_subprocess, debug
+from ezyt.imageEditor.html_image import get_image_from_html
+from ezyt.base.errors import ProcessingError
+from ezyt.base.utils import get_rendered_template, debug
+
 from .tts import TTS
 
 
@@ -78,7 +79,6 @@ class SubmissionData:
 
     def __init__(self, cfg, submission):
         self.cfg = cfg
-        self.html_to_img_bin_path = cfg.reddit.html_to_img_bin_path
         self.max_size_of_comment_tree = cfg.reddit.get(
             "max_size_of_comment_tree", sys.maxsize
         )
@@ -188,16 +188,9 @@ class SubmissionData:
         rendered_image_filepath = (
             f"{self.working_dir}/{COMMENT_IMG_FILEPATH_TEMPLATE.format(index=index)}"
         )
-        args = [
-            self.html_to_img_bin_path,
-            "--width",
-            "1080",
-            "--height",
-            "720",
-            rendered_template_filepath,
-            rendered_image_filepath,
-        ]
-        _, stderr = run_subprocess(args)
+        _, stderr = get_image_from_html(
+            rendered_template_filepath, rendered_image_filepath
+        )
         if not stderr:
             debug(f"Rendering of comment: {comment.id} successful.")
         return rendered_image_filepath

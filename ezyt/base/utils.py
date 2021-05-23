@@ -1,5 +1,6 @@
 import subprocess
 import logging
+import jinja2
 
 from random import randint
 from pathlib import Path
@@ -7,6 +8,7 @@ from pathlib import Path
 from .errors import ProcessingError
 
 DEBUG = True
+
 
 def run_subprocess(args):
     process = subprocess.Popen(
@@ -21,6 +23,13 @@ def run_subprocess(args):
     return stdout, stderr
 
 
+def get_rendered_template(template_path, args):
+    """renders and returns the template in-memory, only use with small files."""
+    with open(template_path, "r") as f:
+        template = jinja2.Template(f.read())
+    return template.render(args)
+
+
 def get_tmp_filepath_in_dir(directory, suffix=""):
     path_format = "{directory}/tmp_{uid}{suffix}"
     while True:
@@ -28,6 +37,7 @@ def get_tmp_filepath_in_dir(directory, suffix=""):
         path = path_format.format(directory=directory, uid=uid, suffix=suffix)
         if not Path(path).exists():
             return path
+
 
 def debug(msg):
     logging.debug(msg)
